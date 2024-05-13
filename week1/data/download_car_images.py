@@ -1,36 +1,23 @@
+from duckduckgo_search import DDGS
 import requests
-from bs4 import BeautifulSoup
-import os
 
-def download_images(query, num_images):
-    # Create a directory to save the images
-    if not os.path.exists(query):
-        os.makedirs(query)
+# Initialize the DDGS class
+ddgs = DDGS()
 
-    # Bing image search URL
-    url = f"https://www.bing.com/images/search?q={query}&qft=+filterui:imagesize-large&FORM=IRFLTR"
+# Search for images (replace 'kittens' with your desired query)
+image_results = ddgs.images(keywords='white cars', max_results=15)
 
-    # Requesting the search page
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+# Process the image results (e.g., download the images)
+i = 0
+for result in image_results:
+    i+=1
+    image_url = result['image']
+    # Your code to download the image goes here
+    print(f"Downloaded image: {image_url}")
+    response = requests.get(image_url)
+    image_data = response.content
 
-    # Extracting image URLs
-    image_urls = []
-    for img in soup.find_all('img', class_='mimg'):
-        if 'data-src' in img.attrs:
-            image_urls.append(img['data-src'])
+    # Save the image to a file (e.g., img.jpg)
+    with open("new/white-{}.jpg".format(i), "wb") as f:
+        f.write(image_data)
 
-    # Download images
-    for i, img_url in enumerate(image_urls[:num_images]):
-        try:
-            response = requests.get(img_url)
-            if response.status_code == 200:
-                with open(os.path.join(query, f"{query}_{i}.jpg"), 'wb') as f:
-                    f.write(response.content)
-        except Exception as e:
-            print(f"Error downloading image {i + 1}: {str(e)}")
-
-if __name__ == "__main__":
-    query = "suv"
-    num_images = 75
-    download_images(query, num_images)
